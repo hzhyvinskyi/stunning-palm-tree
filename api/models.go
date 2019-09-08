@@ -1,27 +1,22 @@
 package api
 
 import (
-	"errors"
 	"fmt"
-	"github.com/99designs/gqlgen/graphql"
 	"io"
 	"strconv"
 	"time"
+
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/hzhyvinskyi/stunning-palm-tree/api/errors"
 )
 
-type User struct {
-	ID    int    `json:id`
-	Name  string `json:name`
-	Email string `json:email`
-}
-
 type Video struct {
-	ID          int       `json:id`
-	Name        string    `json:name`
-	Description string    `json:description`
-	User        User      `json:user`
-	URL         string    `json:url`
-	CreatedAt   time.Time `json:createdAt`
+	ID          int       `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	UserID      int		  `json:"-"`
+	URL         string    `json:"url"`
+	CreatedAt   time.Time `json:"createdAt"`
 	Related     []Video
 }
 

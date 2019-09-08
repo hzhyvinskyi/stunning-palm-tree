@@ -9,9 +9,11 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/hzhyvinskyi/stunning-palm-tree/api"
 	"github.com/vektah/gqlparser"
 	"github.com/vektah/gqlparser/ast"
 )
@@ -36,6 +38,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Video() VideoResolver
 }
 
 type DirectiveRoot struct {
@@ -75,10 +78,15 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateVideo(ctx context.Context, input NewVideo) (*Video, error)
+	CreateVideo(ctx context.Context, input NewVideo) (*api.Video, error)
 }
 type QueryResolver interface {
-	Videos(ctx context.Context, limit *int, offset *int) ([]*Video, error)
+	Videos(ctx context.Context, limit *int, offset *int) ([]*api.Video, error)
+}
+type VideoResolver interface {
+	User(ctx context.Context, obj *api.Video) (*User, error)
+
+	Screenshots(ctx context.Context, obj *api.Video) ([]*Screenshot, error)
 }
 
 type executableSchema struct {
@@ -477,10 +485,10 @@ func (ec *executionContext) _Mutation_createVideo(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*Video)
+	res := resTmp.(*api.Video)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNVideo2ᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚐVideo(ctx, field.Selections, res)
+	return ec.marshalNVideo2ᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚋapiᚐVideo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_Videos(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -521,10 +529,10 @@ func (ec *executionContext) _Query_Videos(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Video)
+	res := resTmp.([]*api.Video)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNVideo2ᚕᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚐVideo(ctx, field.Selections, res)
+	return ec.marshalNVideo2ᚕᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚋapiᚐVideo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -633,10 +641,10 @@ func (ec *executionContext) _Screenshot_id(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Screenshot_videoId(ctx context.Context, field graphql.CollectedField, obj *Screenshot) (ret graphql.Marshaler) {
@@ -670,10 +678,10 @@ func (ec *executionContext) _Screenshot_videoId(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Screenshot_url(ctx context.Context, field graphql.CollectedField, obj *Screenshot) (ret graphql.Marshaler) {
@@ -744,10 +752,10 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
@@ -824,7 +832,7 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Video_id(ctx context.Context, field graphql.CollectedField, obj *Video) (ret graphql.Marshaler) {
+func (ec *executionContext) _Video_id(ctx context.Context, field graphql.CollectedField, obj *api.Video) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -855,13 +863,13 @@ func (ec *executionContext) _Video_id(ctx context.Context, field graphql.Collect
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Video_name(ctx context.Context, field graphql.CollectedField, obj *Video) (ret graphql.Marshaler) {
+func (ec *executionContext) _Video_name(ctx context.Context, field graphql.CollectedField, obj *api.Video) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -898,7 +906,7 @@ func (ec *executionContext) _Video_name(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Video_description(ctx context.Context, field graphql.CollectedField, obj *Video) (ret graphql.Marshaler) {
+func (ec *executionContext) _Video_description(ctx context.Context, field graphql.CollectedField, obj *api.Video) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -935,7 +943,7 @@ func (ec *executionContext) _Video_description(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Video_user(ctx context.Context, field graphql.CollectedField, obj *Video) (ret graphql.Marshaler) {
+func (ec *executionContext) _Video_user(ctx context.Context, field graphql.CollectedField, obj *api.Video) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -948,13 +956,13 @@ func (ec *executionContext) _Video_user(ctx context.Context, field graphql.Colle
 		Object:   "Video",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.User, nil
+		return ec.resolvers.Video().User(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -972,7 +980,7 @@ func (ec *executionContext) _Video_user(ctx context.Context, field graphql.Colle
 	return ec.marshalNUser2ᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Video_url(ctx context.Context, field graphql.CollectedField, obj *Video) (ret graphql.Marshaler) {
+func (ec *executionContext) _Video_url(ctx context.Context, field graphql.CollectedField, obj *api.Video) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1009,7 +1017,7 @@ func (ec *executionContext) _Video_url(ctx context.Context, field graphql.Collec
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Video_createdAt(ctx context.Context, field graphql.CollectedField, obj *Video) (ret graphql.Marshaler) {
+func (ec *executionContext) _Video_createdAt(ctx context.Context, field graphql.CollectedField, obj *api.Video) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1040,13 +1048,13 @@ func (ec *executionContext) _Video_createdAt(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTimestamp2string(ctx, field.Selections, res)
+	return ec.marshalNTimestamp2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Video_screenshots(ctx context.Context, field graphql.CollectedField, obj *Video) (ret graphql.Marshaler) {
+func (ec *executionContext) _Video_screenshots(ctx context.Context, field graphql.CollectedField, obj *api.Video) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1059,13 +1067,13 @@ func (ec *executionContext) _Video_screenshots(ctx context.Context, field graphq
 		Object:   "Video",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Screenshots, nil
+		return ec.resolvers.Video().Screenshots(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1080,7 +1088,7 @@ func (ec *executionContext) _Video_screenshots(ctx context.Context, field graphq
 	return ec.marshalOScreenshot2ᚕᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚐScreenshot(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Video_related(ctx context.Context, field graphql.CollectedField, obj *Video) (ret graphql.Marshaler) {
+func (ec *executionContext) _Video_related(ctx context.Context, field graphql.CollectedField, obj *api.Video) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -1118,10 +1126,10 @@ func (ec *executionContext) _Video_related(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Video)
+	res := resTmp.([]api.Video)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNVideo2ᚕᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚐVideo(ctx, field.Selections, res)
+	return ec.marshalNVideo2ᚕgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚋapiᚐVideo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -2295,7 +2303,7 @@ func (ec *executionContext) unmarshalInputNewVideo(ctx context.Context, obj inte
 			}
 		case "userId":
 			var err error
-			it.UserID, err = ec.unmarshalNID2string(ctx, v)
+			it.UserID, err = ec.unmarshalNID2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2470,7 +2478,7 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 var videoImplementors = []string{"Video"}
 
-func (ec *executionContext) _Video(ctx context.Context, sel ast.SelectionSet, obj *Video) graphql.Marshaler {
+func (ec *executionContext) _Video(ctx context.Context, sel ast.SelectionSet, obj *api.Video) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.RequestContext, sel, videoImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -2482,39 +2490,57 @@ func (ec *executionContext) _Video(ctx context.Context, sel ast.SelectionSet, ob
 		case "id":
 			out.Values[i] = ec._Video_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Video_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "description":
 			out.Values[i] = ec._Video_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "user":
-			out.Values[i] = ec._Video_user(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Video_user(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "url":
 			out.Values[i] = ec._Video_url(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "createdAt":
 			out.Values[i] = ec._Video_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "screenshots":
-			out.Values[i] = ec._Video_screenshots(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Video_screenshots(ctx, field, obj)
+				return res
+			})
 		case "related":
 			out.Values[i] = ec._Video_related(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -2786,12 +2812,12 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalID(v)
+func (ec *executionContext) unmarshalNID2int(ctx context.Context, v interface{}) (int, error) {
+	return api.UnmarshalID(v)
 }
 
-func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalID(v)
+func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := api.MarshalID(v)
 	if res == graphql.Null {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2818,12 +2844,12 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNTimestamp2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalNTimestamp2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	return api.UnmarshalTimestamp(v)
 }
 
-func (ec *executionContext) marshalNTimestamp2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
+func (ec *executionContext) marshalNTimestamp2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := api.MarshalTimestamp(v)
 	if res == graphql.Null {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2846,11 +2872,11 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋhzhyvinskyiᚋstunnin
 	return ec._User(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNVideo2githubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚐVideo(ctx context.Context, sel ast.SelectionSet, v Video) graphql.Marshaler {
+func (ec *executionContext) marshalNVideo2githubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚋapiᚐVideo(ctx context.Context, sel ast.SelectionSet, v api.Video) graphql.Marshaler {
 	return ec._Video(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNVideo2ᚕᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚐVideo(ctx context.Context, sel ast.SelectionSet, v []*Video) graphql.Marshaler {
+func (ec *executionContext) marshalNVideo2ᚕgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚋapiᚐVideo(ctx context.Context, sel ast.SelectionSet, v []api.Video) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2874,7 +2900,7 @@ func (ec *executionContext) marshalNVideo2ᚕᚖgithubᚗcomᚋhzhyvinskyiᚋstu
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNVideo2ᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚐVideo(ctx, sel, v[i])
+			ret[i] = ec.marshalNVideo2githubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚋapiᚐVideo(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2887,7 +2913,44 @@ func (ec *executionContext) marshalNVideo2ᚕᚖgithubᚗcomᚋhzhyvinskyiᚋstu
 	return ret
 }
 
-func (ec *executionContext) marshalNVideo2ᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚐVideo(ctx context.Context, sel ast.SelectionSet, v *Video) graphql.Marshaler {
+func (ec *executionContext) marshalNVideo2ᚕᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚋapiᚐVideo(ctx context.Context, sel ast.SelectionSet, v []*api.Video) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNVideo2ᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚋapiᚐVideo(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNVideo2ᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚋapiᚐVideo(ctx context.Context, sel ast.SelectionSet, v *api.Video) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")

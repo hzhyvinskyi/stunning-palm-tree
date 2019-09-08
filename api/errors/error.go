@@ -30,7 +30,7 @@ func IsForeignKeyError(err error) bool {
 }
 
 func DebugPrintf(err_ error, args ...interface{}) string {
-	programCounter, file, line := runtime.Caller(1)
+	programCounter, file, line, _ := runtime.Caller(1)
 	fn := runtime.FuncForPC(programCounter)
 	msg := fmt.Sprintf("[%s: %s %d] %s %s", file, fn.Name, line, err_, args)
 	log.Println(msg)

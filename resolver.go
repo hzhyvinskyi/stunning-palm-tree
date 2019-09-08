@@ -36,7 +36,7 @@ func (r *mutationResolver) CreateVideo(ctx context.Context, input NewVideo) (*Vi
 	if err != nil || !rows.Next() {
 		return api.Video{}, err
 	}
-	
+
 	if err := rows.Scan(&newVideo.ID); err != nil {
 		errors.DebugPrintf(err)
 		if errors.IsForeignKeyError(err) {
@@ -73,4 +73,23 @@ func (r *queryResolver) Videos(ctx context.Context, limit *int, offset *int) ([]
 	}
 
 	return videos, nil
+}
+
+type videoResolver struct{ *Resolver }
+
+func (r *videoResolver) User(ctx context.Context, obj *api.Video) (api.User, error) {
+	rows, _ := dal.LogAndQuery(r.db, "SELECT id, name, email FROM users WHERE id = $1", obj.UserID)
+	defer rows.Close()
+
+	if !rows.Next() {
+		return api.User{}, nil
+	}
+
+	var user api.User
+	if err := rows.Scan(&user.ID, &user.Name, &user.Email); err != nil {
+		errors.DebugPrintf(err)
+		return api.User{}, errors.InternalServerError
+	}
+
+	return user, nil
 }
