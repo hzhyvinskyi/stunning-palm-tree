@@ -13,3 +13,10 @@ resolver:
   filename: resolver.go
   type: Resolver
 autobind: []
+models:
+  Video:
+    model: github.com/hzhyvinskyi/stunning-palm-tree/api.Video
+  ID:
+    model: github.com/hzhyvinskyi/stunning-palm-tree/api.ID
+  Timestamp:
+    model: github.com/hzhyvinskyi/stunning-palm-tree/api.Timestamp
