@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -38,6 +39,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Subscription() SubscriptionResolver
 	Video() VideoResolver
 }
 
@@ -57,6 +59,10 @@ type ComplexityRoot struct {
 		ID      func(childComplexity int) int
 		URL     func(childComplexity int) int
 		VideoID func(childComplexity int) int
+	}
+
+	Subscription struct {
+		VideoPublished func(childComplexity int) int
 	}
 
 	User struct {
@@ -82,6 +88,9 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Videos(ctx context.Context, limit *int, offset *int) ([]*api.Video, error)
+}
+type SubscriptionResolver interface {
+	VideoPublished(ctx context.Context) (<-chan *api.Video, error)
 }
 type VideoResolver interface {
 	User(ctx context.Context, obj *api.Video) (*User, error)
@@ -148,6 +157,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Screenshot.VideoID(childComplexity), true
+
+	case "Subscription.videoPublished":
+		if e.complexity.Subscription.VideoPublished == nil {
+			break
+		}
+
+		return e.complexity.Subscription.VideoPublished(childComplexity), true
 
 	case "User.email":
 		if e.complexity.User.Email == nil {
@@ -270,7 +286,36 @@ func (e *executableSchema) Mutation(ctx context.Context, op *ast.OperationDefini
 }
 
 func (e *executableSchema) Subscription(ctx context.Context, op *ast.OperationDefinition) func() *graphql.Response {
-	return graphql.OneShot(graphql.ErrorResponse(ctx, "subscriptions are not supported"))
+	ec := executionContext{graphql.GetRequestContext(ctx), e}
+
+	next := ec._Subscription(ctx, op.SelectionSet)
+	if ec.Errors != nil {
+		return graphql.OneShot(&graphql.Response{Data: []byte("null"), Errors: ec.Errors})
+	}
+
+	var buf bytes.Buffer
+	return func() *graphql.Response {
+		buf := ec.RequestMiddleware(ctx, func(ctx context.Context) []byte {
+			buf.Reset()
+			data := next()
+
+			if data == nil {
+				return nil
+			}
+			data.MarshalGQL(&buf)
+			return buf.Bytes()
+		})
+
+		if buf == nil {
+			return nil
+		}
+
+		return &graphql.Response{
+			Data:       buf,
+			Errors:     ec.Errors,
+			Extensions: ec.Extensions,
+		}
+	}
 }
 
 type executionContext struct {
@@ -329,6 +374,10 @@ type Mutation {
 
 type Query {
     Videos(limit: Int = 25, offset: Int = 0): [Video!]!
+}
+
+type Subscription {
+    videoPublished: Video!
 }
 
 scalar Timestamp
@@ -719,6 +768,34 @@ func (ec *executionContext) _Screenshot_url(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Subscription_videoPublished(ctx context.Context, field graphql.CollectedField) func() graphql.Marshaler {
+	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
+		Field: field,
+		Args:  nil,
+	})
+	// FIXME: subscriptions are missing request middleware stack https://github.com/99designs/gqlgen/issues/259
+	//          and Tracer stack
+	rctx := ctx
+	results, err := ec.resolvers.Subscription().VideoPublished(rctx)
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	return func() graphql.Marshaler {
+		res, ok := <-results
+		if !ok {
+			return nil
+		}
+		return graphql.WriterFunc(func(w io.Writer) {
+			w.Write([]byte{'{'})
+			graphql.MarshalString(field.Alias).MarshalGQL(w)
+			w.Write([]byte{':'})
+			ec.marshalNVideo2ᚖgithubᚗcomᚋhzhyvinskyiᚋstunningᚑpalmᚑtreeᚋapiᚐVideo(ctx, field.Selections, res).MarshalGQL(w)
+			w.Write([]byte{'}'})
+		})
+	}
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *User) (ret graphql.Marshaler) {
@@ -2437,6 +2514,26 @@ func (ec *executionContext) _Screenshot(ctx context.Context, sel ast.SelectionSe
 		return graphql.Null
 	}
 	return out
+}
+
+var subscriptionImplementors = []string{"Subscription"}
+
+func (ec *executionContext) _Subscription(ctx context.Context, sel ast.SelectionSet) func() graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, subscriptionImplementors)
+	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
+		Object: "Subscription",
+	})
+	if len(fields) != 1 {
+		ec.Errorf(ctx, "must subscribe to exactly one stream")
+		return nil
+	}
+
+	switch fields[0].Name {
+	case "videoPublished":
+		return ec._Subscription_videoPublished(ctx, fields[0])
+	default:
+		panic("unknown field " + strconv.Quote(fields[0].Name))
+	}
 }
 
 var userImplementors = []string{"User"}

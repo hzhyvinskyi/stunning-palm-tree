@@ -6,10 +6,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hzhyvinskyi/stunneni-palm-tree/api"
-	"github.com/hzhyvinskyi/stunneni-palm-tree/api/dal"
-	"github.com/hzhyvinskyi/stunneni-palm-tree/api/errors"
+	"github.com/hzhyvinskyi/stunning-palm-tree/api"
+	"github.com/hzhyvinskyi/stunning-palm-tree/api/dal"
+	"github.com/hzhyvinskyi/stunning-palm-tree/api/errors"
 )
+
+var videoPublishedChannel map[string]chan api.Video
+
+func init() {
+	videoPublishedChannel = map[string]chan api.Video[]
+}
 
 type Resolver struct{}
 
@@ -43,9 +49,13 @@ func (r *mutationResolver) CreateVideo(ctx context.Context, input NewVideo) (*Vi
 		  return api.Video{}, errors.UserNotExist
 		}
 		return api.Video{}, errors.InternalServerError
-	  }
-	  
-	  return newVideo, nil
+	}
+
+	for _, observer := range videoPublishedChannel {
+		observer <- newVideo
+	}
+
+	return newVideo, nil
 }
 
 type queryResolver struct{ *Resolver }
@@ -92,4 +102,17 @@ func (r *videoResolver) User(ctx context.Context, obj *api.Video) (api.User, err
 	}
 
 	return user, nil
+}
+
+type subscriptionResolver struct{ *Resolver }
+
+func (r *subscriptionResolver) VideoPublished(ctx context.Context) (<-chan api.Video, error) {
+	id := randx.String(8)
+
+	videoEvent := make(chan api.Video, 1)
+	go func() {
+		<-ctx.Done()
+	}()
+	videoPublishedChannel[id] = videoEvent
+	return videoEvent, nil
 }

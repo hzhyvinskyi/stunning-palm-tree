@@ -36,4 +36,8 @@ type Query {
     Videos(limit: Int = 25, offset: Int = 0): [Video!]!
 }
 
+type Subscription {
+    videoPublished: Video!
+}
+
 scalar Timestamp
