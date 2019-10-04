@@ -29,7 +29,7 @@ input NewVideo {
 }
 
 type Mutation {
-    createVideo(input: NewVideo!): Video!
+    createVideo(input: NewVideo!): Video! @isAuthenticated
 }
 
 type Query {
@@ -41,3 +41,5 @@ type Subscription {
 }
 
 scalar Timestamp
+
+directive @isAuthenticated on FIELD_DEFINITION

@@ -27,6 +27,7 @@ func MarshalID(id int) graphql.Marshaler {
 	})
 }
 
+// UnmarshalID ...
 func UnmarshalID(v interface{}) (int, error) {
 	id, ok := v.(string)
 	if !ok {
@@ -36,6 +37,7 @@ func UnmarshalID(v interface{}) (int, error) {
 	return i, err
 }
 
+// MarshalTimestamp ...
 func MarshalTimestamp(t time.Time) graphql.Marshaler {
 	timestamp := t.Unix() * 1000
 	return graphql.WriterFunc(func(w io.Writer) {
@@ -43,6 +45,7 @@ func MarshalTimestamp(t time.Time) graphql.Marshaler {
 	})
 }
 
+// UnmarshalTimestamp ...
 func UnmarshalTimestamp(v interface{}) (time.Time, error) {
 	if tmpStr, ok := v.(int); !ok {
 		return time.Time{}, errors.TimeStampError
